@@ -1,36 +1,38 @@
 import dash
 from dash import Dash, dcc, html
 from dash.dependencies import Input, Output, State
+# import numpy as np
 import tensorflow as tf
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
-
-# https://stackoverflow.com/questions/67711358/valueerror-attempt-to-convert-a-value-none-with-an-unsupported-type-class/68049002#68049002
 
 ########### Define your variables ######
 
 tabtitle = 'cats vs dogs'
 
 # Load the trained model
-# file = tarfile.open('model.tar.gz')
-# file.extractall('DVC2.h5')
-model = load_model('modelrun_3epochs')
+model = tf.keras.models.load_model('modelrun_3epochs.h5')
 
 
 ######## Define helper functions
 
 
 def make_prediction(img_file):
-    img = image.load_img(img_file, target_size=(128, 128))
-    img = tf.reshape(img,[1,128, 128,3])
-    img = tf.cast(img, tf.float32)
-    img=img/255
-    y_pred = model.predict(img)
+    # img = image.load_img(img_file, target_size=(64, 64))
+    # img = tf.reshape(img,[1,64, 64,3])
+    # img = tf.cast(img, tf.float32)
+    # img=img/255
+    img = tf.keras.preprocessing.image.load_img(img_file, target_size=(128, 128))
+
+    img_array = tf.keras.preprocessing.image.img_to_array(img)
+    img_reshape = tf.reshape(img_array,[1,128, 128,3])
+    # img_array = np.array([img_array])  # Convert single image to a batch.
+    # input_arr_reshape = np.reshape(input_arr,[1,64, 64,3]) # reshape to match expected format
+    img_arr_normalized=img_reshape/255 # reduce min-max to 0-1
+    y_pred = model.predict(img_arr_normalized)
+
     prediction = (y_pred>0.5).astype("int")
     classes=['DOG', 'CAT']
     dog_prob=round(y_pred[0][0].astype("float"),4)
     cat_prob=round(1-y_pred[0][0].astype("float"),4)
-    # return f"It's a {classes[prediction]}! DOG probability: {dog_prob}, CAT probability: {cat_prob}"
     return f"DOG probability: {dog_prob}, CAT probability: {cat_prob}"
 
 
